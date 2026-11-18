@@ -1,46 +1,101 @@
+:root {
+  --bg-main: #0f172a;
+  --bg-card: #1e293b;
+  --border-card: #334155;
+  --text-primary: #f8fafc;
+  --text-muted: #94a3b8;
+}
+
 body {
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
-  padding: 50px;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   margin: 0;
-  text-align: center;
+  padding: 0;
 }
 
-.flexHeader {
+.custom-navbar {
+  background-color: var(--bg-card);
+  border-bottom: 1px solid var(--border-card);
+}
+
+.brand-icon {
+  width: 42px;
+  height: 42px;
+  background: linear-gradient(135deg, #0284c7, #38bdf8);
+  border-radius: 10px;
   display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  justify-content: space-between;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  color: white;
 }
 
-a {
-  color: #00B7FF;
+.custom-select {
+  background-color: #0f172a;
+  color: #f8fafc;
+  border: 1px solid #475569;
+  min-width: 200px;
+  font-weight: 500;
 }
 
-body select {
-  padding: 10px 70px 10px 13px;
-  max-width: 100%;
-  height: auto;
-  border: 1px solid #e3e3e3;
-  border-radius: 3px;
-  background: url("https://i.ibb.co/b7xjLrB/selectbox-arrow.png") right center no-repeat;
-  background-color: #fff;
-  color: #444444;
-  line-height: 16px;
-  appearance: none;
-  /* this is must */ -webkit-appearance: none;
-  -moz-appearance: none;
+.custom-select:focus {
+  background-color: #0f172a;
+  color: #f8fafc;
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 0.2rem rgba(56, 189, 248, 0.25);
 }
 
-/* body select.select_box option */
-body select option {
-  padding: 0 4px;
+.kpi-card, .chart-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
 }
 
-/* for Edge */
-select::-ms-expand {
-  display: none;
+.kpi-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
 }
 
-select:disabled::-ms-expand {
-  background: #f60;
+.kpi-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.kpi-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.chart-container {
+  position: relative;
+  height: 52vh;
+  min-height: 320px;
+  width: 100%;
+}
+
+/* Animación de giro para el icono del ventilador cuando coolingOn es true */
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+.fan-spinning {
+  animation: spin 2s linear infinite;
+}
+
+/* Parpadeo suave para el indicador EN VIVO */
+@keyframes pulseLive {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+.live-pulse {
+  animation: pulseLive 2s infinite;
 }
