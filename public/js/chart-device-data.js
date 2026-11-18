@@ -2,40 +2,32 @@
 /* eslint-disable no-restricted-globals */
 /* eslint-disable no-undef */
 $(document).ready(() => {
-  // if deployed to a site supporting SSL, use wss://
   const protocol = document.location.protocol.startsWith('https') ? 'wss://' : 'ws://';
   const webSocket = new WebSocket(protocol + location.host);
 
-  // Clase para almacenar el historial en memoria por cada dispositivo
   class DeviceData {
     constructor(deviceId) {
       this.deviceId = deviceId;
       this.maxLen = 50;
       this.timeData = new Array(this.maxLen);
-      this.avgTempData = new Array(this.maxLen);
-      this.maxTempData = new Array(this.maxLen);
-      this.humidityData = new Array(this.maxLen);
-      this.powerKwData = new Array(this.maxLen);
+      this.temperatureData = new Array(this.maxLen);
+      this.coolingOn = false;
+      this.doorOpen = false;
     }
 
-    addData(time, avgTemp, maxTemp, humidity, powerKw) {
+    addData(time, temperature, coolingOn, doorOpen) {
       this.timeData.push(time);
-      this.avgTempData.push(avgTemp);
-      this.maxTempData.push(maxTemp);
-      this.humidityData.push(humidity);
-      this.powerKwData.push(powerKw);
+      this.temperatureData.push(temperature);
+      this.coolingOn = coolingOn;
+      this.doorOpen = doorOpen;
 
       if (this.timeData.length > this.maxLen) {
         this.timeData.shift();
-        this.avgTempData.shift();
-        this.maxTempData.shift();
-        this.humidityData.shift();
-        this.powerKwData.shift();
+        this.temperatureData.shift();
       }
     }
   }
 
-  // Lista de dispositivos detectados
   class TrackedDevices {
     constructor() {
       this.devices = [];
@@ -57,51 +49,17 @@ $(document).ready(() => {
 
   const trackedDevices = new TrackedDevices();
 
-  // Definición de las 4 líneas de la gráfica
   const chartData = {
     datasets: [
       {
-        fill: false,
-        label: 'Temp. Media (°C)',
-        yAxisID: 'TempPower',
+        fill: true,
+        label: 'Temperatura (°C)',
+        yAxisID: 'Temperature',
         borderColor: 'rgba(24, 120, 240, 1)',
         pointBoarderColor: 'rgba(24, 120, 240, 1)',
-        backgroundColor: 'rgba(24, 120, 240, 0.4)',
+        backgroundColor: 'rgba(24, 120, 240, 0.15)',
         pointHoverBackgroundColor: 'rgba(24, 120, 240, 1)',
         pointHoverBorderColor: 'rgba(24, 120, 240, 1)',
-        spanGaps: true,
-      },
-      {
-        fill: false,
-        label: 'Temp. Máxima (°C)',
-        yAxisID: 'TempPower',
-        borderColor: 'rgba(255, 65, 54, 1)',
-        pointBoarderColor: 'rgba(255, 65, 54, 1)',
-        backgroundColor: 'rgba(255, 65, 54, 0.4)',
-        pointHoverBackgroundColor: 'rgba(255, 65, 54, 1)',
-        pointHoverBorderColor: 'rgba(255, 65, 54, 1)',
-        spanGaps: true,
-      },
-      {
-        fill: false,
-        label: 'Potencia Media (kW)',
-        yAxisID: 'TempPower',
-        borderColor: 'rgba(46, 204, 64, 1)',
-        pointBoarderColor: 'rgba(46, 204, 64, 1)',
-        backgroundColor: 'rgba(46, 204, 64, 0.4)',
-        pointHoverBackgroundColor: 'rgba(46, 204, 64, 1)',
-        pointHoverBorderColor: 'rgba(46, 204, 64, 1)',
-        spanGaps: true,
-      },
-      {
-        fill: false,
-        label: 'Humedad Media (%)',
-        yAxisID: 'Humidity',
-        borderColor: 'rgba(255, 204, 0, 1)',
-        pointBoarderColor: 'rgba(255, 204, 0, 1)',
-        backgroundColor: 'rgba(255, 204, 0, 0.4)',
-        pointHoverBackgroundColor: 'rgba(255, 204, 0, 1)',
-        pointHoverBorderColor: 'rgba(255, 204, 0, 1)',
         spanGaps: true,
       }
     ]
@@ -111,10 +69,10 @@ $(document).ready(() => {
     scales: {
       yAxes: [
         {
-          id: 'TempPower',
+          id: 'Temperature',
           type: 'linear',
           scaleLabel: {
-            labelString: 'Temperatura (°C) / Potencia (kW)',
+            labelString: 'Temperatura (°C)',
             display: true,
           },
           position: 'left',
@@ -123,90 +81,85 @@ $(document).ready(() => {
             suggestedMax: 10,
             beginAtZero: true
           }
-        },
-        {
-          id: 'Humidity',
-          type: 'linear',
-          scaleLabel: {
-            labelString: 'Humedad (%)',
-            display: true,
-          },
-          position: 'right',
-          ticks: {
-            suggestedMin: 0,
-            suggestedMax: 100,
-            beginAtZero: true
-          }
         }
       ]
     }
   };
 
-  // Inicializar contexto de Chart.js
   const ctx = document.getElementById('iotChart').getContext('2d');
-  const myLineChart = new Chart(
-    ctx,
-    {
-      type: 'line',
-      data: chartData,
-      options: chartOptions,
-    });
+  const myLineChart = new Chart(ctx, {
+    type: 'line',
+    data: chartData,
+    options: chartOptions,
+  });
 
-  // Manejo del selector de dispositivos
   let needsAutoSelect = true;
   const deviceCount = document.getElementById('deviceCount');
   const listOfDevices = document.getElementById('listOfDevices');
 
   function OnSelectionChange() {
+    if (listOfDevices.selectedIndex === -1) return;
     const device = trackedDevices.findDevice(listOfDevices[listOfDevices.selectedIndex].text);
+    if (!device) return;
+
     chartData.labels = device.timeData;
-    chartData.datasets[0].data = device.avgTempData;
-    chartData.datasets[1].data = device.maxTempData;
-    chartData.datasets[2].data = device.powerKwData;
-    chartData.datasets[3].data = device.humidityData;
+    chartData.datasets[0].data = device.temperatureData;
     myLineChart.update();
   }
   listOfDevices.addEventListener('change', OnSelectionChange, false);
 
-  // Recepción de mensajes desde el backend vía WebSocket
+  function processReading(rawItem, fallbackDeviceId, fallbackDate) {
+    // Desempaquetar si viene envuelto en { event: { payload: ... } } o { payload: ... }
+    const eventObj = rawItem.event ? rawItem.event : rawItem;
+    const reading = eventObj.payload ? eventObj.payload : eventObj;
+
+    // Priorizar fridgeId del payload, luego origin del evento, luego el DeviceId de IoT Hub
+    const deviceId = reading.fridgeId || eventObj.origin || fallbackDeviceId;
+    const timestamp = reading.timestamp || fallbackDate;
+    const temp = reading.temperature;
+
+    if (!deviceId || !timestamp || temp === undefined) {
+      return;
+    }
+
+    let device = trackedDevices.findDevice(deviceId);
+    if (!device) {
+      device = new DeviceData(deviceId);
+      trackedDevices.devices.push(device);
+      const numDevices = trackedDevices.getDevicesCount();
+      deviceCount.innerText = numDevices === 1 ? `${numDevices} device` : `${numDevices} devices`;
+
+      const node = document.createElement('option');
+      const nodeText = document.createTextNode(deviceId);
+      node.appendChild(nodeText);
+      listOfDevices.appendChild(node);
+
+      if (needsAutoSelect) {
+        needsAutoSelect = false;
+        listOfDevices.selectedIndex = 0;
+        OnSelectionChange();
+      }
+    }
+
+    const shortTime = new Date(timestamp).toLocaleTimeString();
+    device.addData(shortTime, temp, reading.coolingOn, reading.doorOpen);
+  }
+
   webSocket.onmessage = function onMessage(message) {
     try {
       const messageData = JSON.parse(message.data);
       console.log(messageData);
 
-      // Validar que viene fecha y al menos una de tus métricas
-      if (!messageData.MessageDate || (!messageData.IotData.avgTemperature && !messageData.IotData.avgHumidity)) {
-        return;
+      // Obtener el cuerpo enviado desde server.js (IotData) o el mensaje directo
+      const rootData = messageData.IotData ? messageData.IotData : messageData;
+
+      if (Array.isArray(rootData)) {
+        rootData.forEach((item) => {
+          processReading(item, messageData.DeviceId, messageData.MessageDate);
+        });
+      } else {
+        processReading(rootData, messageData.DeviceId, messageData.MessageDate);
       }
-
-      // Buscar o registrar el dispositivo (ej. "nevera-local-dev")
-      let device = trackedDevices.findDevice(messageData.DeviceId);
-      if (!device) {
-        device = new DeviceData(messageData.DeviceId);
-        trackedDevices.devices.push(device);
-        const numDevices = trackedDevices.getDevicesCount();
-        deviceCount.innerText = numDevices === 1 ? `${numDevices} device` : `${numDevices} devices`;
-
-        const node = document.createElement('option');
-        const nodeText = document.createTextNode(messageData.DeviceId);
-        node.appendChild(nodeText);
-        listOfDevices.appendChild(node);
-
-        if (needsAutoSelect) {
-          needsAutoSelect = false;
-          listOfDevices.selectedIndex = 0;
-          OnSelectionChange();
-        }
-      }
-
-      // Extraer tus campos exactos del JSON y actualizar la gráfica
-      device.addData(
-        messageData.MessageDate,
-        messageData.IotData.avgTemperature,
-        messageData.IotData.maxTemperature,
-        messageData.IotData.avgHumidity,
-        messageData.IotData.avgPowerKw
-      );
 
       myLineChart.update();
     } catch (err) {
