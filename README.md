@@ -8,7 +8,7 @@ Este repositorio parte de un *fork* del ejemplo oficial de Microsoft Azure ([`Az
 
 El código base ha sido modificado para integrarse con la arquitectura del proyecto principal (`codigo2` — simulador térmico con estado y módulo IoT Edge) y cumplir con los requisitos de visualización de la práctica:
 
-* **Compatibilidad con el contrato de telemetría (`FridgeMonitorModule`):** Desempaquetado de eventos procedentes de IoT Hub / IoT Edge (`event.payload`) para extraer `fridgeId`, `temperature`, `coolingOn` (estado del compresor por control de histéresis), `doorOpen`, `timestamp` y `appVersion`.
+* **Compatibilidad con el contrato de telemetría (`FridgeMonitorModule`):** Desempaquetado de eventos procedentes de IoT Hub / IoT Edge (`event.payload`) para extraer `fridgeId`, `temperature`, `coolingOn` (estado del compresor), `doorOpen`, `timestamp` y `appVersion`.
 * **Panel de control en tiempo real (Dark Mode):** Sustitución de la vista genérica por un dashboard con tarjetas KPI por unidad, estado dinámico del compresor y del sensor magnético de puerta, cálculo de rango térmico (mín/máx en ventana de 50 muestras) y alertas visuales ante picos de temperatura o aperturas prolongadas.
 
 ## Configuración en Azure App Service
@@ -17,3 +17,4 @@ Para que la aplicación web lea del endpoint compatible con Event Hubs de Azure 
 
 * `IotHubConnectionString`: Cadena de conexión de Azure IoT Hub (política `service`).
 * `EventHubConsumerGroup`: Nombre del *Consumer Group* exclusivo asignado a esta webapp (ej. `webapp-consumer-group`).
+
